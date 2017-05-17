@@ -16,14 +16,17 @@ import static org.jbehave.core.parsers.RegexStoryParser.NONE;
 import static org.jbehave.core.parsers.RegexStoryParser.concatenateWithOr;
 import static org.jbehave.core.parsers.RegexStoryParser.startingWithNL;
 
+// TODO validate unique titles for templates
 public class RegexTemplatesParser {
 
     private RegexStoryParser storyParser;
     private final Keywords keywords;
+    private final Pattern findGivenTemplate;
 
     public RegexTemplatesParser(RegexStoryParser storyParser) {
         this.storyParser = storyParser;
         this.keywords = storyParser.getKeywords();
+        findGivenTemplate = compile(keywords.givenTemplate() + "(.*)", DOTALL);
     }
 
     protected Templates parseTemplatesFrom(String storyAsText) {
@@ -88,5 +91,27 @@ public class RegexTemplatesParser {
     private Pattern findingTemplateTitle() {
         String startingWords = concatenateWithOr("\\n", "", keywords.startingWords());
         return compile(keywords.template() + "(.*?)\\s*(" + startingWords + "|$).*", DOTALL);
+    }
+
+    public List<String> includeTemplateInSteps(List<String> steps, Templates templates) {
+        List<String> extendedSteps = new ArrayList<String>();
+
+        for (String step : steps) {
+            Matcher matcher = findGivenTemplate.matcher(step);
+            if (matcher.find()) {
+                String templateTitle = matcher.group(1).trim();
+                Template template = templates.getTemplateWithTitle(templateTitle);
+
+                if (template == null) {
+                    throw new IllegalStateException("No template found for template name '" + templateTitle + "'");
+                }
+
+                extendedSteps.addAll(template.getSteps());
+            } else {
+                extendedSteps.add(step);
+            }
+        }
+
+        return extendedSteps;
     }
 }

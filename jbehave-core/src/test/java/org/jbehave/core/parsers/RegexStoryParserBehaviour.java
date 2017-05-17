@@ -2,12 +2,7 @@ package org.jbehave.core.parsers;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -916,4 +911,26 @@ public class RegexStoryParserBehaviour {
         return builder.toString();
     }
 
+    @Test
+    public void shouldParseStoryWithTemplate() {
+        String wholeStory = "Template: SomeTemplate" + NL +
+                "Given something in template" + NL +
+                "When you use that template" + NL +
+                "Given something in template" + NL +
+                "When you use that template" + NL +
+
+                "Scenario: Test include template" + NL +
+                "GivenTemplate: SomeTemplate" + NL +
+                "Given a scenario" + NL +
+                "!-- ignore me" + NL +
+                "When I parse it" + NL +
+                "Then I should get steps";
+
+        Story story = parser.parseStory(wholeStory, storyPath);
+        assertThat(story.getPath(), equalTo(storyPath));
+        List<Scenario> scenarios = story.getScenarios();
+        assertThat(scenarios, hasSize(1));
+        assertThat(scenarios.get(0).getTitle(), equalTo("Test include template"));
+        assertThat(scenarios.get(0).getSteps(), hasSize(7));
+    }
 }

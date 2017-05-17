@@ -2,17 +2,16 @@ package org.jbehave.core.parsers;
 
 import org.hamcrest.Matchers;
 import org.jbehave.core.i18n.LocalizedKeywords;
-import org.jbehave.core.model.Story;
 import org.jbehave.core.model.TableTransformers;
 import org.jbehave.core.model.Template;
 import org.jbehave.core.model.Templates;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 public class RegexTemplatesParserTest {
 
@@ -111,4 +110,27 @@ public class RegexTemplatesParserTest {
         assertThat(templates.getTemplates().get(0).getTitle(), equalTo("SomeTemplate"));
         assertThat(templates.getTemplates().get(0).getSteps(), hasSize(2));
     }
+
+    @Test
+    public void shouldReplaceTemplateCorrectly() throws Exception {
+        String wholeStory = "Template: SomeTemplate" + NL +
+                "Given some hunk" + NL +
+                "When you crash that" + NL +
+
+                "Scenario: Test" + NL +
+                "GivenTemplate: SomeTemplate" + NL +
+                "Given a scenario" + NL +
+                "!-- ignore me" + NL +
+                "When I parse it" + NL +
+                "Then I should get steps";
+
+        RegexTemplatesParser templatesParser = new RegexTemplatesParser(parser);
+        Templates templates = templatesParser.parseTemplatesFrom(wholeStory);
+
+        List<String> steps = Arrays.asList("GivenTemplate: SomeTemplate" + NL, "Given a scenario");
+        List<String> newSteps = templatesParser.includeTemplateInSteps(steps, templates);
+
+        assertThat(newSteps, hasSize(3));
+    }
+
 }

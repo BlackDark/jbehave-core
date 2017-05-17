@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.removeStart;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,6 +28,7 @@ public class RegexStoryParser implements StoryParser {
     protected static final String NONE = "";
     private final Keywords keywords;
     private final ExamplesTableFactory tableFactory;
+    private Templates templates;
 
     public RegexStoryParser() {
         this(new TableTransformers());
@@ -66,7 +68,7 @@ public class RegexStoryParser implements StoryParser {
         Narrative narrative = parseNarrativeFrom(storyAsText);
         GivenStories givenStories = parseGivenStories(storyAsText);
         Lifecycle lifecycle = parseLifecycle(storyAsText);
-        Templates templates = new RegexTemplatesParser(this).parseTemplatesFrom(storyAsText);
+        templates = new RegexTemplatesParser(this).parseTemplatesFrom(storyAsText);
         List<Scenario> scenarios = parseScenariosFrom(storyAsText);
         Story story = new Story(storyPath, description, meta, narrative, givenStories, lifecycle, scenarios);
         if (storyPath != null) {
@@ -256,7 +258,8 @@ public class RegexStoryParser implements StoryParser {
         if (givenStories.requireParameters()) {
             givenStories.useExamplesTable(examplesTable);
         }
-        List<String> steps = findSteps(scenarioWithoutTitle);
+        List<String> steps = new RegexTemplatesParser(this)
+                .includeTemplateInSteps(findStepsWithTemplate(scenarioWithoutTitle), templates);
         return new Scenario(title, meta, givenStories, examplesTable, steps);
     }
 
@@ -297,6 +300,18 @@ public class RegexStoryParser implements StoryParser {
         Matcher matcher = findingSteps().matcher(stepsAsText);
         List<String> steps = new ArrayList<String>();
         int startAt = 0;
+        while (matcher.find(startAt)) {
+            steps.add(StringUtils.substringAfter(matcher.group(1), "\n"));
+            startAt = matcher.start(4);
+        }
+        return steps;
+    }
+
+    protected List<String> findStepsWithTemplate(String stepsAsText) {
+        Matcher matcher = findingStepsWithTemplate().matcher(stepsAsText);
+        List<String> steps = new ArrayList<String>();
+        int startAt = 0;
+        // TODO Step extraction of givenTemplate is not workign
         while (matcher.find(startAt)) {
             steps.add(StringUtils.substringAfter(matcher.group(1), "\n"));
             startAt = matcher.start(4);
@@ -366,6 +381,16 @@ public class RegexStoryParser implements StoryParser {
     private Pattern findingScenarioGivenStories() {
         String startingWords = concatenateWithOr("\\n", "", keywords.startingWords());
         return compile("\\n" + keywords.givenStories() + "((.|\\n)*?)\\s*(" + startingWords + ").*", DOTALL);
+    }
+
+    private Pattern findingStepsWithTemplate() {
+        List<String> startingWords = Arrays.asList(keywords.startingWords());
+        startingWords.add(keywords.givenTemplate());
+        String initialStartingWords = concatenateWithOr("\\n", "", startingWords.toArray(new String[]{}));
+        String followingStartingWords = concatenateWithOr("\\n", "\\s", );
+        return compile(
+                "((" + initialStartingWords + "|" + keywords.givenTemplate() + ")\\s(.)*?)\\s*(\\Z|" + followingStartingWords + "|\\n"
+                        + keywords.examplesTable() + ")", DOTALL);
     }
 
     private Pattern findingSteps() {

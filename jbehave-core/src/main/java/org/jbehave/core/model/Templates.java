@@ -21,4 +21,12 @@ public class Templates {
         return templates;
     }
 
+    public Template getTemplateWithTitle(String title) {
+        for (Template template : templates) {
+            if (template.getTitle().equals(title)) {
+                return template;
+            }
+        }
+        return null;
+    }
 }
