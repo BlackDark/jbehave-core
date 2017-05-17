@@ -22,6 +22,8 @@ public class Keywords {
 
     private static final String SYNONYM_SEPARATOR = "\\|";
     
+
+    public static final String TEMPLATE ="Template";
     public static final String META = "Meta";
     public static final String META_PROPERTY = "MetaProperty";
     public static final String NARRATIVE = "Narrative";
@@ -66,7 +68,7 @@ public class Keywords {
             SCENARIO, GIVEN_STORIES, LIFECYCLE, BEFORE, AFTER, EXAMPLES_TABLE, EXAMPLES_TABLE_ROW, EXAMPLES_TABLE_HEADER_SEPARATOR,
             EXAMPLES_TABLE_VALUE_SEPARATOR, EXAMPLES_TABLE_IGNORABLE_SEPARATOR, GIVEN, WHEN, THEN, AND, IGNORABLE,
             PENDING, NOT_PERFORMED, FAILED, DRY_RUN, STORY_CANCELLED, DURATION, OUTCOME, OUTCOME_ANY, OUTCOME_SUCCESS, OUTCOME_FAILURE,
-            OUTCOME_DESCRIPTION, OUTCOME_VALUE, OUTCOME_MATCHER, OUTCOME_VERIFIED, META_FILTER, YES, NO);
+            OUTCOME_DESCRIPTION, OUTCOME_VALUE, OUTCOME_MATCHER, OUTCOME_VERIFIED, META_FILTER, YES, NO, TEMPLATE);
 
 
     private final String meta;
@@ -109,6 +111,7 @@ public class Keywords {
     private final String yes;
     private final String no;
     private final Map<StepType, String> startingWordsByType = new HashMap<StepType, String>();
+    private final String template;
 
 
     public static Map<String, String> defaultKeywords() {
@@ -152,6 +155,7 @@ public class Keywords {
         keywords.put(META_FILTER, "MetaFilter:");
         keywords.put(YES, "Yes");
         keywords.put(NO, "No");
+        keywords.put(TEMPLATE, "Template:");
         return keywords;
     }
 
@@ -207,6 +211,7 @@ public class Keywords {
         this.metaFilter = keyword(META_FILTER, keywords);
         this.yes = keyword(YES, keywords);
         this.no = keyword(NO, keywords);
+        this.template = keyword(TEMPLATE, keywords);
 
         startingWordsByType.put(StepType.GIVEN, given());
         startingWordsByType.put(StepType.WHEN, when());
@@ -222,6 +227,10 @@ public class Keywords {
             throw new KeywordNotFound(name, keywords);
         }
         return keyword;
+    }
+
+    public String template() {
+        return template;
     }
 
     public String meta() {

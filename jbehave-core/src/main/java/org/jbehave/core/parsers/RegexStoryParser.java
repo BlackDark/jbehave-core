@@ -15,17 +15,8 @@ import org.jbehave.core.annotations.AfterScenario.Outcome;
 import org.jbehave.core.configuration.Configuration;
 import org.jbehave.core.configuration.Keywords;
 import org.jbehave.core.i18n.LocalizedKeywords;
-import org.jbehave.core.model.Description;
-import org.jbehave.core.model.ExamplesTable;
-import org.jbehave.core.model.ExamplesTableFactory;
-import org.jbehave.core.model.GivenStories;
-import org.jbehave.core.model.Lifecycle;
+import org.jbehave.core.model.*;
 import org.jbehave.core.model.Lifecycle.Steps;
-import org.jbehave.core.model.Meta;
-import org.jbehave.core.model.Narrative;
-import org.jbehave.core.model.Scenario;
-import org.jbehave.core.model.Story;
-import org.jbehave.core.model.TableTransformers;
 
 /**
  * Pattern-based story parser, which uses the keywords provided to parse the
@@ -33,7 +24,7 @@ import org.jbehave.core.model.TableTransformers;
  */
 public class RegexStoryParser implements StoryParser {
 
-    private static final String NONE = "";
+    protected static final String NONE = "";
     private final Keywords keywords;
     private final ExamplesTableFactory tableFactory;
 
@@ -75,12 +66,17 @@ public class RegexStoryParser implements StoryParser {
         Narrative narrative = parseNarrativeFrom(storyAsText);
         GivenStories givenStories = parseGivenStories(storyAsText);
         Lifecycle lifecycle = parseLifecycle(storyAsText);
+        Templates templates = new RegexTemplatesParser(this).parseTemplatesFrom(storyAsText);
         List<Scenario> scenarios = parseScenariosFrom(storyAsText);
         Story story = new Story(storyPath, description, meta, narrative, givenStories, lifecycle, scenarios);
         if (storyPath != null) {
             story.namedAs(new File(storyPath).getName());
         }
         return story;
+    }
+
+    protected Keywords getKeywords() {
+        return keywords;
     }
 
     private Description parseDescriptionFrom(String storyAsText) {
@@ -264,7 +260,7 @@ public class RegexStoryParser implements StoryParser {
         return new Scenario(title, meta, givenStories, examplesTable, steps);
     }
 
-    private String startingWithNL(String text) {
+    protected static String startingWithNL(String text) {
         if ( !text.startsWith("\n") ){ // always ensure starts with newline
             return "\n" + text;
         }
@@ -297,7 +293,7 @@ public class RegexStoryParser implements StoryParser {
         return new GivenStories(givenStories);
     }
 
-    private List<String> findSteps(String stepsAsText) {
+    protected List<String> findSteps(String stepsAsText) {
         Matcher matcher = findingSteps().matcher(stepsAsText);
         List<String> steps = new ArrayList<String>();
         int startAt = 0;
@@ -384,11 +380,11 @@ public class RegexStoryParser implements StoryParser {
         return compile("\\n" + keywords.examplesTable() + "\\s*(.*)", DOTALL);
     }
 
-    private String concatenateWithOr(String... keywords) {
+    protected static String concatenateWithOr(String... keywords) {
         return concatenateWithOr(null, null, keywords);
     }
 
-    private String concatenateWithOr(String beforeKeyword, String afterKeyword, String[] keywords) {
+    protected static String concatenateWithOr(String beforeKeyword, String afterKeyword, String[] keywords) {
         StringBuilder builder = new StringBuilder();
         String before = beforeKeyword != null ? beforeKeyword : NONE;
         String after = afterKeyword != null ? afterKeyword : NONE;
