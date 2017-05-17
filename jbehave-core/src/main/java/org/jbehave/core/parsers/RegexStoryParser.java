@@ -311,7 +311,6 @@ public class RegexStoryParser implements StoryParser {
         Matcher matcher = findingStepsWithTemplate().matcher(stepsAsText);
         List<String> steps = new ArrayList<String>();
         int startAt = 0;
-        // TODO Step extraction of givenTemplate is not workign
         while (matcher.find(startAt)) {
             steps.add(StringUtils.substringAfter(matcher.group(1), "\n"));
             startAt = matcher.start(4);
@@ -384,18 +383,16 @@ public class RegexStoryParser implements StoryParser {
     }
 
     private Pattern findingStepsWithTemplate() {
-        List<String> startingWords = Arrays.asList(keywords.startingWords());
-        startingWords.add(keywords.givenTemplate());
-        String initialStartingWords = concatenateWithOr("\\n", "", startingWords.toArray(new String[]{}));
-        String followingStartingWords = concatenateWithOr("\\n", "\\s", );
-        return compile(
-                "((" + initialStartingWords + "|" + keywords.givenTemplate() + ")\\s(.)*?)\\s*(\\Z|" + followingStartingWords + "|\\n"
-                        + keywords.examplesTable() + ")", DOTALL);
+        return findingSteps(keywords.givenTemplate());
     }
 
-    private Pattern findingSteps() {
-        String initialStartingWords = concatenateWithOr("\\n", "", keywords.startingWords());
-        String followingStartingWords = concatenateWithOr("\\n", "\\s", keywords.startingWords());
+    private Pattern findingSteps(String... additionalStartingWords) {
+        List<String> startingWords = new ArrayList<String>(Arrays.asList(keywords.startingWords()));
+        startingWords.addAll(Arrays.asList(additionalStartingWords));
+        String[] startWords = startingWords.toArray(new String[]{});
+
+        String initialStartingWords = concatenateWithOr("\\n", "", startWords);
+        String followingStartingWords = concatenateWithOr("\\n", "\\s", startWords);
         return compile(
                 "((" + initialStartingWords + ")\\s(.)*?)\\s*(\\Z|" + followingStartingWords + "|\\n"
                         + keywords.examplesTable() + ")", DOTALL);

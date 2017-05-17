@@ -931,6 +931,6 @@ public class RegexStoryParserBehaviour {
         List<Scenario> scenarios = story.getScenarios();
         assertThat(scenarios, hasSize(1));
         assertThat(scenarios.get(0).getTitle(), equalTo("Test include template"));
-        assertThat(scenarios.get(0).getSteps(), hasSize(7));
+        assertThat(scenarios.get(0).getSteps(), hasSize(8));
     }
 }
