@@ -93,6 +93,21 @@ public class RegexTemplatesParserTest {
         new RegexTemplatesParser(parser).parseTemplatesFrom(wholeStory);
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void shouldFailOnDuplicateTitle() throws Exception {
+        String wholeStory = "Template: Duplicate" + NL +
+                "Given some hunk" + NL +
+                "Template: Duplicate" + NL +
+                "Given some hunk" + NL +
+                "Scenario: Test" + NL +
+                "Given a scenario" + NL +
+                "!-- ignore me" + NL +
+                "When I parse it" + NL +
+                "Then I should get steps";
+
+        new RegexTemplatesParser(parser).parseTemplatesFrom(wholeStory);
+    }
+
     @Test
     public void shouldNormallyProcessWithGivenTemplate() throws Exception {
         String wholeStory = "Template: SomeTemplate" + NL +
